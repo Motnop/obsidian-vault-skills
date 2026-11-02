@@ -26,15 +26,17 @@ Abyss Tasks recognizes the project note because its tags are under `#project` (`
 Include only the parts the task needs. A minimal task is:
 
 ```markdown
-- [ ] #task/one-off #category/computer_science Собрать требования 🆔 PRJ-1
+- [ ] #task/one-off #category/computer_science Собрать требования 🆔 prj-requirements
 ```
 
 ### IDs
 
 `🆔` is the task ID marker. Abyss Tasks accepts IDs matching `[A-Za-z0-9_-]+`.
 
-- Use ASCII only. `ЕКП-4` looks fine to a human but the plugin will not parse a Cyrillic ID; `EKP-4` will.
-- Pick a short project prefix and number sequentially: `EKP-4`, `EKP-5`, ...
+- Use ASCII only. `ЕКП-4` looks fine to a human but the plugin will not parse a Cyrillic ID; `curator-text` will.
+- Prefer readable word-based IDs over cryptic abbreviations: `curator-text`, `curator-markup`, `curator-rag`. Numbers are optional; use them only when they help order.
+- A bare word (`text`, `markup`) is allowed, but a project word prefix reduces collisions with other projects.
+- Avoid abbreviations like `EKP`: they are hard to read and easy to forget.
 - Check existing tasks before adding new ones. IDs are used globally by the plugin, and duplicates make dependencies ambiguous.
 - Never invent an ID for an existing task; read the current project note first.
 
@@ -43,8 +45,8 @@ Include only the parts the task needs. A minimal task is:
 `⛔` means "this task cannot start before the referenced task ends".
 
 ```markdown
-- [ ] ... Разметить книгу для RAG 🆔 EKP-5 ⛔ EKP-4
-- [ ] ... Собрать сценарий n8n 🆔 EKP-10 ⛔ EKP-6, EKP-9
+- [ ] ... Разметить книгу для RAG 🆔 curator-markup ⛔ curator-text
+- [ ] ... Собрать сценарий n8n 🆔 curator-n8n ⛔ curator-rag, curator-voice
 ```
 
 - Reference IDs, not titles.
@@ -102,12 +104,12 @@ The emoji is a visual marker; project views group tasks by heading.
 
 1. Read the project note. Inspect the existing `# Tasks` section and collect used IDs.
 2. Define the result of the project and 2–4 stages. A stage is a checkpoint, not a task.
-3. Choose an ASCII prefix and number the tasks. Start with `#task/next_action` for the first actionable task; use `#task/one-off` for the rest.
+3. Choose readable ASCII IDs (a project word plus a task word). Start with `#task/next_action` for the first actionable task; use `#task/one-off` for the rest.
 4. Write task lines with type, category, ID, and a clear result in the description. Add dependencies after all blockers have IDs.
 5. Add acceptance criteria as text under the task list. One line per ID, for example:
    ```markdown
    ## Критерии готовности
-   - **EKP-4** — текст книги и задания собраны в файлы.
+   - **curator-text** — текст книги и задания собраны в файлы.
    ```
 6. Verify with the Obsidian CLI:
    ```bash
@@ -123,23 +125,24 @@ The emoji is a visual marker; project views group tasks by heading.
 
 ## 📍 Подготовка
 
-- [ ] #task/next_action #category/computer_science Собрать требования 🆔 PRJ-1
-- [ ] #task/one-off #category/computer_science Согласовать объём 🆔 PRJ-2 ⛔ PRJ-1
+- [ ] #task/next_action #category/computer_science Собрать требования 🆔 prj-requirements
+- [ ] #task/one-off #category/computer_science Согласовать объём 🆔 prj-scope ⛔ prj-requirements
 
 ## 📍 Реализация
 
-- [ ] #task/one-off #category/computer_science Собрать прототип 🆔 PRJ-3 ⛔ PRJ-2
+- [ ] #task/one-off #category/computer_science Собрать прототип 🆔 prj-prototype ⛔ prj-scope
 
 ## Критерии готовности
 
-- **PRJ-1** — требования собраны.
-- **PRJ-2** — объём согласован.
-- **PRJ-3** — прототип работает.
+- **prj-requirements** — требования собраны.
+- **prj-scope** — объём согласован.
+- **prj-prototype** — прототип работает.
 ```
 
 ## Pitfalls
 
-- **Cyrillic ID.** `ЕКП-4` is not parsed; use `EKP-4`.
+- **Cyrillic ID.** `ЕКП-4` is not parsed; use `curator-text`.
+- **Cryptic abbreviation.** `EKP-4` is hard to read; use `curator-text`.
 - **Duplicate ID.** Two tasks with the same `🆔` make dependencies ambiguous.
 - **Dependency on a missing ID.** The plugin shows the task as blocked by an unavailable task.
 - **`#task/default` in an inline task.** That tag belongs to metadata task notes; the plugin's ignore query excludes it.
