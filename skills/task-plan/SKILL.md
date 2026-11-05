@@ -1,161 +1,119 @@
 ---
 name: task-plan
-description: Plan and create project tasks as inline Markdown for Abyss Tasks. Use when the user asks for a project work plan, roadmap, stages, milestones, tasks with IDs and dependencies, or tasks that must appear in Abyss Tasks. Handles 🆔 task IDs, ⛔ blocked-by links, task types, categories, priorities, dates, and acceptance criteria. Triggers include "план работ", "задачи для проекта", "поставь задачи", "roadmap", "milestones", "Abyss Tasks", "зависимости задач". Use this instead of task-inline when the tasks belong to a project note. For quick GTD capture in daily notes use task-inline; for metadata task notes in base/tasks use task-note.
+description: "Создаёт и обновляет проектные задачи в Markdown для Abyss Tasks: чекбоксы, идентификаторы, зависимости и критерии готовности. Используй для оформления плана проекта в Obsidian под этот плагин."
 ---
 
-# Project Task Planning for Abyss Tasks
+Результат — план в заметке проекта, который корректно читается
+Abyss Tasks.
 
-A project task plan is a set of inline Markdown tasks in the project note body. Abyss Tasks reads them directly, so the project note is the single source of truth: no separate task notes are needed.
+## Прочитай контекст
 
-Use this skill when the user wants a work plan for a project and the result must be visible in Abyss Tasks: kanban, timeline, IDs, dependencies, blocked states.
+Прочитай заметку проекта и её существующие задачи.
+Определи действующие правила хранилища и настройки Abyss Tasks:
+projects.membershipQuery, taskIgnoreQuery, секцию вставки и taskStatuses.
 
-## Where tasks live
+При недоступных настройках явно укажи допущения.
+Не меняй настройки ради плана.
 
-- Project note: `projects/<Title>.md`, with `tags: project/...` in frontmatter.
-- Tasks: under `# Tasks` in the project body, grouped by stage headings.
-- Keep one task per line. Put details and acceptance criteria as plain text below the list, not as extra checkboxes.
+Типы задач и категории бери из существующих определений и тегов.
+В базе mind это periodic/statuses/ и base/categories/.
+Подходящей категории нет — опусти её или уточни у пользователя.
+Теги #task/* являются соглашением базы, а не обязательным
+синтаксисом плагина.
 
-Abyss Tasks recognizes the project note because its tags are under `#project` (`project/single`, `project/longform`, etc.). It parses the inline checkboxes in the body.
+## Подготовь действия
 
-## Task line format
+Проверь результат и зависимости плана.
+Крупные действия разбей по правилам task-decomposition,
+если скилл доступен. Иначе предложи небольшие действия
+с понятным результатом.
 
-```markdown
-- [ ] #task/TYPE #category/CATEGORY Description 🆔 ID ⛔ DEP1, DEP2 🔺 📅 YYYY-MM-DD
-```
+Этапы добавляй по смыслу; фиксированного количества нет.
+Подробно оформляй подготовленные действия,
+не выдумывая неизвестные будущие шаги.
 
-Include only the parts the task needs. A minimal task is:
+## Оформи задачи
 
-```markdown
-- [ ] #task/one-off #category/computer_science Собрать требования 🆔 prj-requirements
-```
+Храни задачи чекбоксами в согласованной заметке проекта
+и существующей секции. При отсутствии секции используй
+настроенную секцию вставки.
+Не создавай для этих же действий отдельные заметки в base/tasks.
 
-### IDs
+Одна задача — одна строка Markdown.
+Группируй этапы заголовками, если это помогает.
+Детали и критерии готовности пиши обычным текстом
+либо списком без чекбоксов.
 
-`🆔` is the task ID marker. Abyss Tasks accepts IDs matching `[A-Za-z0-9_-]+`.
+Не меняй свойства проекта и существующие статусы,
+даты или приоритеты без основания в поручении.
 
-- Use ASCII only. `ЕКП-4` looks fine to a human but the plugin will not parse a Cyrillic ID; `curator-text` will.
-- Prefer readable word-based IDs over cryptic abbreviations: `curator-text`, `curator-markup`, `curator-rag`. Numbers are optional; use them only when they help order.
-- A bare word (`text`, `markup`) is allowed, but a project word prefix reduces collisions with other projects.
-- Avoid abbreviations like `EKP`: they are hard to read and easy to forget.
-- Check existing tasks before adding new ones. IDs are used globally by the plugin, and duplicates make dependencies ambiguous.
-- Never invent an ID for an existing task; read the current project note first.
+Пример строки:
+- [ ] #task/one-off Подготовить текст ⏱️ 30m 🆔 demo-copy
 
-### Dependencies
+Для новых проектных задач добавляй читаемый ASCII ID
+вида project-action: допустимы A–Z, a–z, 0–9,
+дефис и подчёркивание.
 
-`⛔` means "this task cannot start before the referenced task ends".
+Перед выбором ID проверь существующие ID во всём доступном
+хранилище, включая вложенные задачи.
+Сохраняй ID существующих действий.
+Сначала найди уже существующее действие, затем решай,
+нужно ли создавать новое. Повторный запуск не должен дублировать задачи.
+Если существующей задаче нужен ID, добавь свободный
+после проверки, сохранив остальное.
 
-```markdown
-- [ ] ... Разметить книгу для RAG 🆔 curator-markup ⛔ curator-text
-- [ ] ... Собрать сценарий n8n 🆔 curator-n8n ⛔ curator-rag, curator-voice
-```
+## Свяжи зависимости
 
-- Reference IDs, not titles.
-- Multiple blockers are comma-separated after one `⛔`.
-- A referenced ID must exist. A missing ID shows as an unavailable dependency in Abyss Tasks.
-- Add dependencies after the blocker lines exist, so you can verify every ID.
+⛔ id означает: действие зависит от задачи с этим 🆔.
+Несколько ID разделяй запятыми после одного ⛔.
+Отличай зависимость от вложенности и принадлежности этапу.
 
-### Task types and categories
+Проверь существование и однозначность каждой ссылки,
+отсутствие самоссылок и циклов.
+При неоднозначности уточни её, не переназначай существующие ID молча.
 
-Task types come from the vault's GTD statuses in `periodic/statuses/`:
+Учитывай текущие статусы предварительных задач.
+Отменённая задача не равна выполненной.
+Отсутствующая ссылка не доказывает готовность действия.
 
-- `#task/next_action` — the task to start with.
-- `#task/one-off` — a single action.
-- `#task/multistep` — a task that has subtasks.
-- Other types: `inbox`, `waiting_for`, `regular`, `idea`, `reference`, `someday`.
+## Сохрани даты и оценки
 
-Categories come from `base/categories/`. Convert the file name to a tag: `computer science.md` → `#category/computer_science`. Never invent a category; if none fits, omit the tag or ask.
+📅 — дедлайн, ⏳ — запланированная дата, 🛫 — дата начала.
+⏰ HH:MM — время, ⏱️ 30m — длительность.
+Число без единицы длительности не используй.
+Даты пиши YYYY-MM-DD.
 
-### Priorities and dates
+Сохраняй смысл даты из запроса;
+при существенной неоднозначности уточни.
+Назначай даты, время и приоритеты по поручению пользователя.
+Оценку длительности отделяй от заданного ограничения;
+предположительную оценку обозначай в пояснении.
 
-Priority markers trail the description, before any date suffix:
+Приоритеты: 🔺 высший, ⏫ высокий, 🔼 средний,
+🔽 низкий, ⏬ самый низкий; обычный — без маркера.
 
-`🔺` highest, `⏫` high, `🔼` medium, `🔽` low, `⏬` lowest. No marker means normal priority.
+## Планируй рабочие подходы
 
-Date markers:
+Если пользователь поручил составить расписание рабочих подходов,
+оставляй между ними 10 минут перерыва.
 
-- `📅` due
-- `⏳` scheduled
-- `🛫` start
-- `➕` created
-- `✅` completion
-- `❌` cancelled
-- `⏰` time
-- `⏱️` duration
-- `🏁` on-completion
+Перерыв учитывай как свободный интервал.
+Создавай отдельную задачу или напоминание о перерыве,
+только если пользователь этого хочет.
 
-Only add dates the user gave. Do not invent deadlines or priorities.
+## Проверь результат
 
-### Stages
+Перед записью проверь повторы, формат строк, ID и зависимости.
+При обновлении сохраняй выполненные пункты,
+существующие связи и посторонний текст.
+Если изменение заменяет задачу новыми, сначала согласуй
+судьбу старой задачи и её ссылок.
 
-Abyss Tasks has no separate milestone entity. Use headings to group tasks into stages:
+После записи перечитай изменённую заметку.
+При доступном Obsidian проверь отображение в Abyss Tasks
+и разрешение зависимостей.
+Без него прямо укажи границы проверки.
 
-```markdown
-## 📍 Книга готова к RAG
-- [ ] ...
-- [ ] ...
-
-## 📍 Прототип работает
-- [ ] ...
-```
-
-The emoji is a visual marker; project views group tasks by heading.
-
-## Workflow
-
-1. Read the project note. Inspect the existing `# Tasks` section and collect used IDs.
-2. Define the result of the project and 2–4 stages. A stage is a checkpoint, not a task.
-3. Choose readable ASCII IDs (a project word plus a task word). Start with `#task/next_action` for the first actionable task; use `#task/one-off` for the rest.
-4. Write task lines with type, category, ID, and a clear result in the description. Add dependencies after all blockers have IDs.
-5. Add acceptance criteria as text under the task list. One line per ID, for example:
-   ```markdown
-   ## Критерии готовности
-   - **curator-text** — текст книги и задания собраны в файлы.
-   ```
-6. Verify with the Obsidian CLI:
-   ```bash
-   obsidian tasks todo format=json file="<Project>"
-   ```
-   Then open the project in Abyss Tasks and check that dependencies resolve and blocked tasks show as blocked.
-7. Do not create `base/tasks` notes for the same plan unless the user explicitly asks. Abyss Tasks ignores `#task/default` by default, so the two systems would not see each other.
-
-## Example
-
-```markdown
-# Tasks
-
-## 📍 Подготовка
-
-- [ ] #task/next_action #category/computer_science Собрать требования 🆔 prj-requirements
-- [ ] #task/one-off #category/computer_science Согласовать объём 🆔 prj-scope ⛔ prj-requirements
-
-## 📍 Реализация
-
-- [ ] #task/one-off #category/computer_science Собрать прототип 🆔 prj-prototype ⛔ prj-scope
-
-## Критерии готовности
-
-- **prj-requirements** — требования собраны.
-- **prj-scope** — объём согласован.
-- **prj-prototype** — прототип работает.
-```
-
-## Pitfalls
-
-- **Cyrillic ID.** `ЕКП-4` is not parsed; use `curator-text`.
-- **Cryptic abbreviation.** `EKP-4` is hard to read; use `curator-text`.
-- **Duplicate ID.** Two tasks with the same `🆔` make dependencies ambiguous.
-- **Dependency on a missing ID.** The plugin shows the task as blocked by an unavailable task.
-- **`#task/default` in an inline task.** That tag belongs to metadata task notes; the plugin's ignore query excludes it.
-- **Mixing inline tasks and task notes.** Pick one system for a project. This skill uses inline tasks.
-- **Acceptance criteria as checkboxes.** `- [ ]` creates another task; use plain bullets.
-- **Invented dates or priorities.** Add them only when the user gave them.
-
-## Optional dependency check
-
-The plugin UI is the source of truth. For a quick programmatic check:
-
-```bash
-obsidian eval code="(function(){const p=app.plugins.plugins['abyss-tasks'];return p.queries.listNodes().filter(x=>(x.target.ref?.filePath||'').includes('<Project>')).map(x=>({title:x.node.title,id:x.node.dependencyId,deps:x.node.dependsOn}));})()"
-```
-
-This uses plugin internals. If it breaks after a plugin update, fall back to `obsidian tasks` and the Abyss Tasks project view.
+Сообщи, что добавлено или обновлено и какие вопросы остались.
+Скилл сам по себе не поручает выполнять задачи
+или переносить их в другой сервис.
